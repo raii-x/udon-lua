@@ -10,7 +10,11 @@
 #include "lprefix.h"
 
 
+#ifdef __wasm__
+#include "rb_wasm/setjmp.h"
+#else
 #include <setjmp.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 
