@@ -7,9 +7,7 @@ add_compile_options(-Wall -Wextra -O2 -DLUA_COMPAT_5_3)
 
 if(BUILD_FOR_WASM)
   set(CMAKE_C_COMPILER "$ENV{WASI_SDK_PATH}/bin/clang")
-  set(CMAKE_SYSROOT "$ENV{WASI_SDK_PATH}/share/wasi-sysroot")
-  set(CMAKE_RANLIB "$ENV{WASI_SDK_PATH}/bin/ranlib")
-  add_compile_options(-Os -D_WASI_EMULATED_SIGNAL)
+  add_compile_options(-Os -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_PROCESS_CLOCKS)
 
   add_subdirectory(rb_wasm)
 endif()
@@ -51,7 +49,7 @@ add_executable(lua
 target_link_libraries(lua PRIVATE -lm)
 
 if(BUILD_FOR_WASM)
-  target_link_libraries(lua PRIVATE -lwasi-emulated-signal rb_wasm)
+  target_link_libraries(lua PRIVATE -lwasi-emulated-signal -lwasi-emulated-process-clocks rb_wasm)
   set_target_properties(lua PROPERTIES SUFFIX ".wasm")
 
   add_custom_command(TARGET lua POST_BUILD
