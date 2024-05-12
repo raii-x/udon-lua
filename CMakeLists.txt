@@ -38,10 +38,10 @@ add_executable(lua
   src/lutf8lib.c
   src/linit.c
   src/runtime.c
-  src/main.c
 )
 
 target_link_libraries(lua PRIVATE -lm -lwasi-emulated-signal -lwasi-emulated-process-clocks rb_wasm)
+target_link_options(lua PRIVATE -mexec-model=reactor -Wl,--export=malloc -Wl,--export=free)
 set_target_properties(lua PROPERTIES SUFFIX ".wasm")
 
 add_custom_command(TARGET lua POST_BUILD

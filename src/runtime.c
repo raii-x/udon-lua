@@ -1,44 +1,62 @@
-#include <time.h>
-#include <stdio.h>
+#include <stdint.h>
+#include <wasm32-wasi/wasi/api.h>
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+#include "llimits.h"
 #include "rb_wasm/setjmp.h"
 #include "rb_wasm/fiber.h"
 #include "rb_wasm/asyncify.h"
 #include "runtime.h"
 
-#define FRAME_CLOCK_NEXT (CLOCKS_PER_SEC / 100)
-time_t frame_clock = FRAME_CLOCK_NEXT;
 
-__attribute__((export_name("set_frame_clock")))
-void set_frame_clock(time_t time) {
-  frame_clock = time;
-}
+uint64_t yield_time = 0;
 
-__attribute__((export_name("clocks_per_sec")))
-clock_t clocks_per_sec() {
-  return CLOCKS_PER_SEC;
+__attribute__((export_name("set_yield_time")))
+void set_yield_time(uint64_t time) {
+  yield_time = time;
 }
 
 rb_wasm_fiber_context fctx_main;
 
-void init_fctx_main(void) {
-  rb_wasm_init_context(&fctx_main);
-  fctx_main.is_started = true;
-}
-
 void yield_if_time_exceeded(void) {
-  if (clock() > frame_clock) {
+  uint64_t current;
+  UNUSED(__wasi_clock_time_get(0, 1000000, &current));
+  if (current >= yield_time) {
     rb_wasm_swapcontext(&fctx_main);
   }
 }
 
-int rb_wasm_rt_start(int (main)(int argc, char **argv), int argc, char **argv) {
+
+#define RUNTIME_OK     0
+#define RUNTIME_YIELD  1
+#define RUNTIME_ERROR  2
+
+
+__attribute__((noinline))
+static int run_internal(const char *source) {
+  rb_wasm_init_context(&fctx_main);
+  fctx_main.is_started = true;
+
+  lua_State *L = luaL_newstate();
+  luaL_openlibs(L);
+
+  int err = luaL_dostring(L, source);
+  if (err != LUA_OK) {
+    printf("%s\n", lua_tostring(L, -1));
+    return RUNTIME_ERROR;
+  }
+
+  return RUNTIME_OK;
+}
+
+__attribute__((export_name("run")))
+int run(const char *source) {
   int result;
   void *asyncify_buf;
-  int debug_count = 0;
 
   while (1) {
-    debug_count++;
-    result = main(argc, argv);
+    result = run_internal(source);
 
     // NOTE: it's important to call 'asyncify_stop_unwind' here instead in rb_wasm_handle_jmp_unwind
     // because unless that, Asyncify inserts another unwind check here and it unwinds to the root frame.
@@ -51,14 +69,11 @@ int rb_wasm_rt_start(int (main)(int argc, char **argv), int argc, char **argv) {
 
     asyncify_buf = rb_wasm_handle_fiber_unwind();
     if (asyncify_buf) {
-      frame_clock += FRAME_CLOCK_NEXT;
       asyncify_start_rewind(asyncify_buf);
-      continue;
+      return RUNTIME_YIELD;
     }
 
     break;
   }
-
-  printf("execution division count: %d\n", debug_count);
   return result;
 }
