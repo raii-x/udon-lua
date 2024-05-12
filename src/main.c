@@ -1,8 +1,11 @@
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
+#include "runtime.h"
 
 static int lua_main(int argc, char* argv[]) {
+  init_fctx_main();
+
   if (argc != 2) return 2;
 
   lua_State *L = luaL_newstate();
@@ -17,11 +20,6 @@ static int lua_main(int argc, char* argv[]) {
   return 0;
 }
 
-#ifdef __wasm__
-int rb_wasm_rt_start(int (main)(int argc, char **argv), int argc, char **argv);
-#define lua_main(argc, argv) rb_wasm_rt_start(lua_main, argc, argv)
-#endif
-
 int main(int argc, char* argv[]) {
-  return lua_main(argc, argv);
+  return rb_wasm_rt_start(lua_main, argc, argv);
 }

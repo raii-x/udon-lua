@@ -1,16 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(lua VERSION 5.4.6 LANGUAGES C)
 
-option(BUILD_FOR_WASM "Build project for Wasm" ON)
+add_compile_options(-Wall -Wextra -Os -DLUA_COMPAT_5_3 -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_PROCESS_CLOCKS)
+set(CMAKE_C_COMPILER "$ENV{WASI_SDK_PATH}/bin/clang")
 
-add_compile_options(-Wall -Wextra -O2 -DLUA_COMPAT_5_3)
-
-if(BUILD_FOR_WASM)
-  set(CMAKE_C_COMPILER "$ENV{WASI_SDK_PATH}/bin/clang")
-  add_compile_options(-Os -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_PROCESS_CLOCKS)
-
-  add_subdirectory(rb_wasm)
-endif()
+add_subdirectory(rb_wasm)
 
 add_executable(lua
   src/lapi.c
@@ -43,16 +37,13 @@ add_executable(lua
   src/ltablib.c
   src/lutf8lib.c
   src/linit.c
+  src/runtime.c
   src/main.c
 )
 
-target_link_libraries(lua PRIVATE -lm)
+target_link_libraries(lua PRIVATE -lm -lwasi-emulated-signal -lwasi-emulated-process-clocks rb_wasm)
+set_target_properties(lua PROPERTIES SUFFIX ".wasm")
 
-if(BUILD_FOR_WASM)
-  target_link_libraries(lua PRIVATE -lwasi-emulated-signal -lwasi-emulated-process-clocks rb_wasm)
-  set_target_properties(lua PROPERTIES SUFFIX ".wasm")
-
-  add_custom_command(TARGET lua POST_BUILD
-    COMMAND wasm-opt $<TARGET_FILE:lua> -o $<TARGET_FILE:lua>
-    -g -Os --asyncify --pass-arg=asyncify-ignore-imports)
-endif()
+add_custom_command(TARGET lua POST_BUILD
+  COMMAND wasm-opt $<TARGET_FILE:lua> -o $<TARGET_FILE:lua>
+  -g -Os --asyncify --pass-arg=asyncify-ignore-imports)

@@ -30,6 +30,8 @@
 #include "ltm.h"
 #include "lvm.h"
 
+#include "runtime.h"
+
 
 /*
 ** By default, use jump tables in the main interpreter loop on gcc
@@ -1131,6 +1133,7 @@ void luaV_finishOp (lua_State *L) {
 
 /* fetch an instruction and prepare its execution */
 #define vmfetch()	{ \
+  yield_if_time_exceeded(); \
   if (l_unlikely(trap)) {  /* stack reallocation or hooks? */ \
     trap = luaG_traceexec(L, pc);  /* handle hooks */ \
     updatebase(ci);  /* correct stack */ \
