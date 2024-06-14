@@ -3,6 +3,8 @@
 Lua interpreter in VRChat.
 This interpreter uses the original Lua 5.4.6 implemented in C converted with [wasm2usharp](https://github.com/raii-x/wasm2usharp "raii-x/wasm2usharp: A tool for converting WebAssembly to UdonSharp").
 
+[The world is available on VRChat.](https://vrchat.com/home/world/wrld_21b0106a-95ab-4fbd-af3d-3a9d99751ff1 "Lua Interpreter - VRChat")
+
 ## How to build Lua to UdonSharp
 
 ### Tested environment
