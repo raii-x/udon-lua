@@ -1,6 +1,7 @@
 # Udon Lua
 
-Lua interpreter in VRChat
+Lua interpreter in VRChat.
+This interpreter uses the original Lua 5.4.6 implemented in C converted with [wasm2usharp](https://github.com/raii-x/wasm2usharp "raii-x/wasm2usharp: A tool for converting WebAssembly to UdonSharp").
 
 ## How to build Lua to UdonSharp
 
@@ -49,7 +50,6 @@ wasm2usharp lua/build/lua.wasm -o Assets/Scripts/Lua.cs
 
 ## Changes from original Lua
 
-The Lua code in this repository is based on Lua 5.4.6.
-Some functions in Lua standard libraries that are not supported in WASI are disabled.
-Ruby's implementation for Asyncify ([lua/rb_wasm](lua/rb_wasm)) is used to use setjmp/longjmp and split long processing to multiple frames (in [lvm.c](lua/src/lvm.c#L1136)).
-Functions for Udon are implemented in [runtime.c](lua/src/runtime.c).
+* Some functions in Lua standard libraries that are not supported in WASI are disabled.
+* Ruby's implementation for Asyncify ([lua/rb_wasm](lua/rb_wasm)) is used to use setjmp/longjmp and split long processing to multiple frames (in [lvm.c](lua/src/lvm.c#L1136)).
+* Functions for Udon are implemented in [runtime.c](lua/src/runtime.c).
