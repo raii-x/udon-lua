@@ -55,3 +55,8 @@ wasm2usharp lua/build/lua.wasm -o Assets/Scripts/Lua.cs
 * Some functions in Lua standard libraries that are not supported in WASI are disabled.
 * Ruby's implementation for Asyncify ([lua/rb_wasm](lua/rb_wasm)) is used to use setjmp/longjmp and split long processing to multiple frames (in [lvm.c](lua/src/lvm.c#L1136)).
 * Functions for Udon are implemented in [runtime.c](lua/src/runtime.c).
+
+## License
+
+The source code for [Lua](lua/src) ([MIT](lua/LICENSE)) and [Ruby](lua/rb_wasm) ([2-clause BSD](lua/rb_wasm/BSDL)) and [the UdonSharp code compiled from them](Assets/Scripts/Lua.cs) are under the original licenses.
+The other source code I have created is under CC0.
